@@ -1,8 +1,8 @@
 // sw.js — tiny offline cache. Pre-caches the static files, then serves
-// cache-first and refreshes the cache in the background (stale-while-revalidate).
+// network-first (so updates show immediately) and falls back to the cache when offline.
 // Bump VERSION whenever you change files so users get the update.
 
-const VERSION = 'hushroom-v2';
+const VERSION = 'hushroom-v3';
 const FILES = [
   './', 'index.html', 'css/style.css', 'manifest.webmanifest',
   'js/main.js', 'js/timer.js', 'js/audio.js', 'js/scene.js', 'js/tasks.js', 'js/stats.js', 'js/storage.js',
@@ -24,12 +24,9 @@ self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== location.origin) return;
   e.respondWith(
-    caches.match(req).then((cached) => {
-      const network = fetch(req).then((res) => {
-        if (res.ok) { const copy = res.clone(); caches.open(VERSION).then((c) => c.put(req, copy)); }
-        return res;
-      }).catch(() => cached);
-      return cached || network;
-    }),
+    fetch(req, { cache: 'no-cache' }).then((res) => {
+      if (res.ok) { const copy = res.clone(); caches.open(VERSION).then((c) => c.put(req, copy)); }
+      return res;
+    }).catch(() => caches.match(req).then((hit) => hit || caches.match('index.html'))),
   );
 });
