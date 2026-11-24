@@ -14,6 +14,7 @@ export function createTasks({ form, input, list, count, clearBtn, onCurrentChang
   let currentId = load('current', null);
   let editingId = null;
   let dragId = null;
+  let fx = null; // { id, cls } one-shot animation for the next render
 
   const persist = () => { save('tasks', tasks); save('current', currentId); };
   const current = () => tasks.find((t) => t.id === currentId && !t.done) || null;
@@ -55,7 +56,8 @@ export function createTasks({ form, input, list, count, clearBtn, onCurrentChang
         const body = editingId === t.id
           ? `<input class="edit-input" type="text" maxlength="120" value="${esc(t.title)}" aria-label="Edit task title" />`
           : `<span class="task-title">${esc(t.title)}</span>`;
-        return `<li class="task${t.done ? ' done' : ''}${isCur ? ' current' : ''}" data-id="${t.id}" draggable="${editingId ? 'false' : 'true'}">
+        const fxCls = fx && fx.id === t.id ? ' ' + fx.cls : '';
+        return `<li class="task${t.done ? ' done' : ''}${isCur ? ' current' : ''}${fxCls}" data-id="${t.id}" draggable="${editingId ? 'false' : 'true'}">
           <input type="checkbox" class="check" aria-label="Mark “${esc(t.title)}” complete" ${t.done ? 'checked' : ''} />
           <div class="task-main">${body}${t.sessions ? `<span class="badge">${t.sessions} ${t.sessions === 1 ? 'session' : 'sessions'}</span>` : ''}</div>
           <div class="task-actions">
@@ -67,6 +69,7 @@ export function createTasks({ form, input, list, count, clearBtn, onCurrentChang
           </div></li>`;
       }).join('');
     }
+    fx = null;
     const open = tasks.filter((t) => !t.done).length;
     count.textContent = tasks.length ? `${open} open · ${tasks.length - open} done` : '';
     clearBtn.disabled = !tasks.some((t) => t.done);
@@ -81,6 +84,7 @@ export function createTasks({ form, input, list, count, clearBtn, onCurrentChang
     if (!title) return;
     const task = { id: uid(), title: title.slice(0, 120), done: false, sessions: 0 };
     tasks.push(task);
+    fx = { id: task.id, cls: 'fx-new' };
     if (!current()) { currentId = task.id; } // first open task becomes the focus automatically
     input.value = '';
     persist(); render(); onCurrentChange(current());
@@ -109,6 +113,7 @@ export function createTasks({ form, input, list, count, clearBtn, onCurrentChang
     const t = tasks.find((x) => x.id === e.target.closest('li').dataset.id);
     if (!t) return;
     t.done = e.target.checked;
+    if (t.done) fx = { id: t.id, cls: 'fx-done' };
     persist(); render(); onCurrentChange(current());
   });
 

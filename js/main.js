@@ -47,15 +47,29 @@ const sceneApi = createScene($('scene'), {
   windowBottom: () => $('stage').clientHeight - 64,
 });
 
-function applyTheme() {
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+/** Run a DOM change under a circular "iris" wipe that grows from `origin` (View Transitions API; instant elsewhere). */
+function iris(origin, change) {
+  if (!document.startViewTransition || reducedMotion.matches) { change(); return; }
+  const r = origin ? origin.getBoundingClientRect() : { left: innerWidth / 2, top: innerHeight / 2, width: 0, height: 0 };
+  root.style.setProperty('--vx', `${r.left + r.width / 2}px`);
+  root.style.setProperty('--vy', `${r.top + r.height / 2}px`);
+  document.startViewTransition(async () => {
+    change();
+    await new Promise((res) => requestAnimationFrame(() => requestAnimationFrame(res))); // let the canvas redraw
+  });
+}
+
+function applyTheme(snap = false) {
   const eff = themePref === 'auto' ? timeTheme() : themePref;
   root.dataset.theme = eff;
-  sceneApi.setTheme(eff);
+  sceneApi.setTheme(eff, snap);
   document.querySelector('meta[name="theme-color"]').content = THEME_COLOR[eff];
   document.querySelectorAll('input[name="theme"]').forEach((r) => { r.checked = r.value === themePref; });
 }
-function setThemePref(p) { themePref = p; save('theme', p); applyTheme(); }
-document.querySelectorAll('input[name="theme"]').forEach((r) => r.addEventListener('change', () => setThemePref(r.value)));
+function setThemePref(p, origin) { themePref = p; save('theme', p); iris(origin, () => applyTheme(true)); }
+document.querySelectorAll('input[name="theme"]').forEach((r) => r.addEventListener('change', () => setThemePref(r.value, r.parentElement)));
 setInterval(() => { if (themePref === 'auto') applyTheme(); }, 60000);
 applyTheme();
 
@@ -98,11 +112,12 @@ function buildMixer() {
   if (!audio.supported) { $('audioNote').hidden = false; }
   $('masterVol').value = audio.masterVol;
   $('channels').innerHTML = CHANNELS.map((c) => `
-    <li class="channel" data-id="${c.id}">
+    <li class="channel reveal" data-fx="wipe" data-id="${c.id}">
       <svg viewBox="0 0 24 24" class="ch-icon" aria-hidden="true">${ICONS[c.id]}</svg>
       <label class="ch-name" for="sw-${c.id}">${c.label}</label>
       <input type="checkbox" role="switch" class="switch" id="sw-${c.id}" ${audio.state[c.id].on ? 'checked' : ''} />
       <input type="range" id="vol-${c.id}" min="0" max="1" step="0.01" value="${audio.state[c.id].vol}" aria-label="${c.label} volume" />
+      <span class="eq" aria-hidden="true">${[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((k) => `<i style="--k:${k}"></i>`).join('')}</span>
     </li>`).join('');
   $('presets').innerHTML = PRESETS.map((p) => `<button type="button" class="chip" data-preset="${p.id}">${p.label}</button>`).join('');
 }
@@ -133,6 +148,7 @@ $('masterVol').addEventListener('input', (e) => { audio.setMaster(Number(e.targe
 
 function setMuted(m) {
   audio.setMuted(m);
+  document.body.classList.toggle('muted', m);
   $('btnMute').setAttribute('aria-pressed', String(m));
   $('btnMute').setAttribute('aria-label', m ? 'Unmute sounds' : 'Mute all sounds');
   saveMix();
@@ -172,6 +188,21 @@ updateCurrentTask();
 const RING = 2 * Math.PI * 90;
 $('ringProg').style.strokeDasharray = RING;
 
+// Rolling digits: every digit is a vertical strip of 0-9 that slides to the right number.
+const digitsEl = $('digits');
+let cols = [];
+function buildDigits(minuteDigits) {
+  const dg = () => `<span class="dg"><span class="col">${Array.from({ length: 10 }, (_, i) => `<b>${i}</b>`).join('')}</span></span>`;
+  digitsEl.innerHTML = dg().repeat(minuteDigits) + '<span class="colon">:</span>' + dg().repeat(2);
+  cols = [...digitsEl.querySelectorAll('.col')];
+}
+function setDigits(str) {
+  const ds = str.replace(':', '').split('');
+  if (ds.length !== cols.length) buildDigits(ds.length - 2);
+  cols.forEach((c, i) => c.style.setProperty('--d', ds[i]));
+}
+buildDigits(2);
+
 const fmt = (ms) => {
   const s = Math.ceil(ms / 1000);
   return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
@@ -179,7 +210,9 @@ const fmt = (ms) => {
 
 function render(t) {
   const left = t.timeLeft;
-  $('time').textContent = fmt(left);
+  setDigits(fmt(left));
+  $('timeText').textContent = fmt(left);
+  $('stage').classList.toggle('running', t.running);
   $('modeLabel').textContent = MODES[t.mode].label;
   $('ringProg').style.strokeDashoffset = RING * t.progress;
   $('btnStart').textContent = t.running ? 'Pause' : (left < t.total ? 'Resume' : 'Start');
@@ -286,17 +319,128 @@ $('dlgConfirm').addEventListener('close', () => {
 });
 
 // ======================================================================
-// Scroll reveal + small nav niceties
+// Motion: loader curtain, split headlines, reveals, magnetic buttons,
+// pointer lamp + parallax, scroll effects. All of it is skipped (or reduced
+// to a plain fade) when the user prefers reduced motion.
 // ======================================================================
-const reveals = document.querySelectorAll('.reveal');
-if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+const reduced = reducedMotion.matches;
+const fine = window.matchMedia('(pointer: fine)').matches;
+const stage = $('stage');
+
+// 1. Split headlines into masked words, and give italic words a hand-drawn underline.
+function splitWords(el) {
+  const walk = (node) => {
+    for (const ch of [...node.childNodes]) {
+      if (ch.nodeType === 3) {
+        const frag = document.createDocumentFragment();
+        for (const tok of ch.textContent.split(/(\s+)/)) {
+          if (!tok) continue;
+          if (/^\s+$/.test(tok)) { frag.append(' '); continue; }
+          const w = document.createElement('span'); w.className = 'w';
+          const i = document.createElement('span'); i.className = 'wi'; i.textContent = tok;
+          w.append(i); frag.append(w);
+        }
+        ch.replaceWith(frag);
+      } else if (ch.nodeType === 1) walk(ch);
+    }
+  };
+  walk(el);
+  el.querySelectorAll('.wi').forEach((w, i) => w.style.setProperty('--i', i));
+  el.classList.add('split');
+}
+const SQUIG = '<svg class="squig" viewBox="0 0 100 12" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M2 7 Q 14 1 26 7 T 50 7 T 74 7 T 98 6"/></svg>';
+const heroH1 = document.querySelector('.hero-copy h1');
+document.querySelectorAll('h1, .sec-head h2, .foot-line').forEach((h) => {
+  splitWords(h);
+  h.querySelectorAll('em').forEach((em) => em.insertAdjacentHTML('beforeend', SQUIG));
+});
+heroH1.style.setProperty('--base', '250ms');
+
+// Footer wordmark: one span per letter so they can rise and wiggle individually.
+const wm = $('watermark');
+wm.innerHTML = [...wm.textContent].map((ch, i) => `<span style="--i:${i}">${ch}</span>`).join('');
+
+// 2. Reveal on scroll (the hero headline is started separately, after the loader).
+const toReveal = [...document.querySelectorAll('.reveal, .split, .watermark')].filter((el) => el !== heroH1);
+if ('IntersectionObserver' in window && !reduced) {
   const io = new IntersectionObserver((entries) => {
     for (const en of entries) if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); }
-  }, { threshold: 0.12, rootMargin: '0px 0px -6% 0px' });
-  reveals.forEach((el, i) => { el.style.setProperty('--d', `${(i % 4) * 70}ms`); io.observe(el); });
+  }, { threshold: 0.15, rootMargin: '0px 0px -6% 0px' });
+  toReveal.forEach((el) => {
+    const sibs = [...(el.parentElement?.children || [])].filter((c) => c.classList.contains('reveal'));
+    el.style.setProperty('--d', `${Math.max(0, sibs.indexOf(el)) * 90}ms`);
+    io.observe(el);
+  });
 } else {
-  reveals.forEach((el) => el.classList.add('in'));
+  toReveal.forEach((el) => el.classList.add('in'));
 }
+
+// 3. Loader curtain on the first visit of a session, then the hero animates in.
+const loader = $('loader');
+const startHero = () => { stage.classList.add('ready'); heroH1.classList.add('in'); };
+let seen = false;
+try { seen = sessionStorage.getItem('hushroom-seen') === '1'; sessionStorage.setItem('hushroom-seen', '1'); } catch { /* ignore */ }
+if (reduced || seen) {
+  loader.remove(); startHero();
+} else {
+  setTimeout(() => {
+    loader.classList.add('done');
+    setTimeout(startHero, 450);
+    setTimeout(() => loader.remove(), 1500);
+  }, 1000);
+}
+
+// 4. Magnetic buttons: they lean toward the pointer.
+if (fine && !reduced) {
+  document.querySelectorAll('.mag').forEach((el) => {
+    el.addEventListener('pointermove', (e) => {
+      const r = el.getBoundingClientRect();
+      el.style.transform = `translate(${(e.clientX - r.left - r.width / 2) * 0.28}px, ${(e.clientY - r.top - r.height / 2) * 0.28}px)`;
+    });
+    el.addEventListener('pointerleave', () => { el.style.transform = ''; });
+  });
+}
+
+// 5. A warm lamp follows the pointer across the window, and the scenery shifts in layers.
+if (fine && !reduced) {
+  stage.addEventListener('pointermove', (e) => {
+    const r = stage.getBoundingClientRect();
+    const x = e.clientX - r.left, y = e.clientY - r.top;
+    stage.style.setProperty('--mx', `${x}px`);
+    stage.style.setProperty('--my', `${y}px`);
+    stage.classList.add('lit');
+    sceneApi.setParallax((x / r.width - 0.5) * 2, (y / r.height - 0.5) * 2);
+  });
+  stage.addEventListener('pointerleave', () => { stage.classList.remove('lit'); sceneApi.setParallax(0, 0); });
+}
+
+// 6. Scroll effects: progress bar, nav that hides on the way down, hero parallax,
+//    marquee that leans with scroll speed, big section numbers that drift.
+const nav = $('nav'), bar = $('progress'), marquee = $('marquee');
+const sections = [...document.querySelectorAll('.section')];
+let lastY = scrollY, ticking = false, skewTimer;
+function onScroll() {
+  ticking = false;
+  const y = scrollY, max = document.documentElement.scrollHeight - innerHeight;
+  bar.style.transform = `scaleX(${max > 0 ? y / max : 0})`;
+  nav.classList.toggle('solid', y > innerHeight * 0.5);
+  if (!reduced) {
+    if (y > lastY && y > innerHeight * 0.9) nav.classList.add('hide');
+    else if (y < lastY) nav.classList.remove('hide');
+    stage.style.setProperty('--sy', Math.min(y, innerHeight));
+    marquee.style.setProperty('--sk', `${Math.max(-7, Math.min(7, -(y - lastY) * 0.12))}deg`);
+    clearTimeout(skewTimer);
+    skewTimer = setTimeout(() => marquee.style.setProperty('--sk', '0deg'), 120);
+    for (const s of sections) {
+      const r = s.getBoundingClientRect();
+      s.style.setProperty('--p', ((r.top + r.height / 2 - innerHeight / 2) / innerHeight).toFixed(3));
+    }
+  }
+  lastY = y;
+}
+addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(onScroll); } }, { passive: true });
+onScroll();
+
 $('footIntro').addEventListener('click', (e) => { e.preventDefault(); $('dlgWelcome').showModal(); });
 
 // ======================================================================
@@ -305,8 +449,10 @@ $('footIntro').addEventListener('click', (e) => { e.preventDefault(); $('dlgWelc
 let focusMode = false;
 function setFocusMode(on) {
   focusMode = on;
-  document.body.classList.toggle('focus-mode', on);
-  $('btnFocus').setAttribute('aria-pressed', String(on));
+  iris($(on ? 'btnFocus' : 'exitFocus'), () => {
+    document.body.classList.toggle('focus-mode', on);
+    $('btnFocus').setAttribute('aria-pressed', String(on));
+  });
   if (on && document.documentElement.requestFullscreen && !document.fullscreenElement) {
     document.documentElement.requestFullscreen().catch(() => {}); // optional nicety
   } else if (!on && document.fullscreenElement) {
@@ -342,7 +488,7 @@ document.addEventListener('keydown', (e) => {
   } else if (k === 'r') timer.reset();
   else if (k === 'm') setMuted(!audio.muted);
   else if (k === 'f') setFocusMode(!focusMode);
-  else if (k === 't') setThemePref(THEMES[(THEMES.indexOf(themePref) + 1) % THEMES.length]);
+  else if (k === 't') setThemePref(THEMES[(THEMES.indexOf(themePref) + 1) % THEMES.length], null);
   else if (e.key === '?') $('dlgHelp').showModal();
   else if (e.key === 'Escape' && focusMode) setFocusMode(false);
 });

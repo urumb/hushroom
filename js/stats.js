@@ -98,7 +98,7 @@ export function renderStats(els) {
       const m = minOn(k);
       total += m;
       const lvl = m === 0 ? 0 : m < 25 ? 1 : m < 60 ? 2 : m < 120 ? 3 : 4;
-      cells += `<rect class="cell l${lvl}" x="${w * (cell + hgap)}" y="${r * (cell + hgap)}" width="${cell}" height="${cell}" rx="3"><title>${k}: ${m} min</title></rect>`;
+      cells += `<rect class="cell l${lvl}" style="--i:${w * 7 + r}" x="${w * (cell + hgap)}" y="${r * (cell + hgap)}" width="${cell}" height="${cell}" rx="3"><title>${k}: ${m} min</title></rect>`;
     }
   }
   els.heatmap.innerHTML = `<svg viewBox="0 0 ${weeks * (cell + hgap)} ${7 * (cell + hgap)}" role="img" aria-label="Heatmap of focus over the last 12 weeks: ${fmtMin(total)} in total">${cells}</svg>`;

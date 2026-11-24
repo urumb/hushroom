@@ -18,9 +18,11 @@
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
+  <div class="loader" id="loader" aria-hidden="true"><span>Hushroom</span></div>
+  <div class="progress" id="progress" aria-hidden="true"></div>
 
-  <!-- ===== Floating glass nav ===== -->
-  <header class="nav">
+  <!-- ===== Nav ===== -->
+  <header class="nav" id="nav">
     <a class="brand" href="#stage" aria-label="Hushroom, back to the room">
       <svg viewBox="0 0 64 64" width="26" height="26" aria-hidden="true">
         <rect width="64" height="64" rx="16" fill="#2d2346" />
@@ -31,19 +33,19 @@
       <span>Hushroom</span>
     </a>
     <nav class="nav-links" aria-label="Sections">
-      <a href="#method">Method</a>
-      <a href="#sounds">Sounds</a>
-      <a href="#tasks">Tasks</a>
-      <a href="#insights">Insights</a>
+      <a href="#method" data-t="Method"><span>Method</span></a>
+      <a href="#sounds" data-t="Sounds"><span>Sounds</span></a>
+      <a href="#tasks" data-t="Tasks"><span>Tasks</span></a>
+      <a href="#insights" data-t="Insights"><span>Insights</span></a>
     </nav>
     <div class="top-actions">
-      <button type="button" class="icon-btn" id="btnMute" aria-pressed="false" aria-label="Mute all sounds" title="Mute (M)">
+      <button type="button" class="icon-btn mag" id="btnMute" aria-pressed="false" aria-label="Mute all sounds" title="Mute (M)">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z"/><path class="waves" d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/><path class="slash" d="M16 9l5 6M21 9l-5 6"/></svg>
       </button>
-      <button type="button" class="icon-btn" id="btnHelp" aria-label="Help and keyboard shortcuts" title="Help (?)">
+      <button type="button" class="icon-btn mag" id="btnHelp" aria-label="Help and keyboard shortcuts" title="Help (?)">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7M12 17h.01"/></svg>
       </button>
-      <button type="button" class="pill-btn" id="btnFocus" aria-pressed="false" title="Focus mode (F)">Focus mode</button>
+      <button type="button" class="pill-btn mag" id="btnFocus" aria-pressed="false" title="Focus mode (F)">Focus mode</button>
     </div>
   </header>
 
@@ -53,7 +55,7 @@
       <canvas id="scene" aria-hidden="true"></canvas>
 
       <div class="hero-copy">
-        <p class="eyebrow">A focus room for students</p>
+        <p class="eyebrow"><span>№ 00</span> A focus room for students</p>
         <h1>Quiet, <em>on&nbsp;demand.</em></h1>
         <p class="lede">A timer, rain and fire made live in your browser, and a window that listens to your mix. No account. Works offline.</p>
         <fieldset class="theme-switch" id="themeSwitch">
@@ -67,6 +69,12 @@
       </div>
 
       <div class="timer-card" id="timerCard">
+        <svg class="stamp" viewBox="0 0 120 120" aria-hidden="true">
+          <defs><path id="stampPath" d="M60,60 m-45,0 a45,45 0 1,1 90,0 a45,45 0 1,1 -90,0"/></defs>
+          <g class="stamp-spin"><text><textPath href="#stampPath">NO SIGNUP · WORKS OFFLINE · NO SIGNUP · WORKS OFFLINE · </textPath></text></g>
+          <path class="stamp-moon" d="M64 40a20 20 0 1 0 12 36 17 17 0 0 1-12-36z"/>
+        </svg>
+
         <div class="modes" role="group" aria-label="Timer mode">
           <button type="button" data-mode="focus" aria-pressed="true">Focus</button>
           <button type="button" data-mode="short" aria-pressed="false">Short break</button>
@@ -79,7 +87,10 @@
             <circle class="prog" id="ringProg" cx="100" cy="100" r="90" />
           </svg>
           <div class="readout">
-            <div class="time" id="time" role="timer" aria-live="off">25:00</div>
+            <div class="time" id="time" role="timer" aria-live="off">
+              <span class="sr-only" id="timeText">25:00</span>
+              <span class="digits" id="digits" aria-hidden="true"></span>
+            </div>
             <div class="mode-label" id="modeLabel">Focus</div>
           </div>
         </div>
@@ -90,7 +101,7 @@
           <button type="button" class="icon-btn" id="btnReset" aria-label="Reset timer" title="Reset (R)">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 3-6.2M4 4v4h4"/></svg>
           </button>
-          <button type="button" class="primary-btn" id="btnStart" title="Start / pause (Space)">Start</button>
+          <button type="button" class="primary-btn mag" id="btnStart" title="Start / pause (Space)">Start</button>
           <button type="button" class="icon-btn" id="btnSkip" aria-label="Skip to next phase" title="Skip">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l9 6-9 6zM18 6v12"/></svg>
           </button>
@@ -107,18 +118,27 @@
       <button type="button" class="audio-hint" id="audioHint" hidden>Tap to start your sounds</button>
     </section>
 
+    <!-- ===== Marquee ===== -->
+    <div class="marquee" id="marquee" aria-hidden="true">
+      <div class="track">
+        <span>rain</span><i></i><span>wind</span><i></i><span>fireplace</span><i></i><span>café murmur</span><i></i><span>brown noise</span><i></i><span>lo-fi pad</span><i></i>
+        <span>rain</span><i></i><span>wind</span><i></i><span>fireplace</span><i></i><span>café murmur</span><i></i><span>brown noise</span><i></i><span>lo-fi pad</span><i></i>
+      </div>
+    </div>
+
     <!-- ===== 01 Method ===== -->
     <section class="section" id="method" aria-labelledby="h-method">
       <div class="wrap">
-        <header class="sec-head center reveal">
-          <p class="eyebrow">The method</p>
+        <span class="secno" aria-hidden="true">01</span>
+        <header class="sec-head center">
+          <p class="eyebrow"><span>№ 01</span> The method</p>
           <h2 id="h-method">Four steps, <em>no distractions</em></h2>
         </header>
         <ol class="steps-grid">
-          <li class="step reveal"><span class="num">1</span><div><h3>Set the mood</h3><p>Pick a preset or mix your own sounds. The window outside changes with them.</p></div></li>
-          <li class="step reveal"><span class="num">2</span><div><h3>Choose one task</h3><p>Write what you are working on and make it your focus. It sits above the timer.</p></div></li>
-          <li class="step reveal"><span class="num">3</span><div><h3>Focus</h3><p>Work until the chime. The timer stays accurate even when the tab is in the background.</p></div></li>
-          <li class="step reveal"><span class="num">4</span><div><h3>Rest, repeat</h3><p>Short breaks, a long break every few sessions, and a streak that grows quietly.</p></div></li>
+          <li class="step reveal" data-fx="wipe"><span class="num"><svg viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24"/></svg>1</span><div><h3>Set the mood</h3><p>Pick a preset or mix your own sounds. The window outside changes with them.</p></div></li>
+          <li class="step reveal" data-fx="wipe"><span class="num"><svg viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24"/></svg>2</span><div><h3>Choose one task</h3><p>Write what you are working on and make it your focus. It sits above the timer.</p></div></li>
+          <li class="step reveal" data-fx="wipe"><span class="num"><svg viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24"/></svg>3</span><div><h3>Focus</h3><p>Work until the chime. The timer stays accurate even when the tab is in the background.</p></div></li>
+          <li class="step reveal" data-fx="wipe"><span class="num"><svg viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24"/></svg>4</span><div><h3>Rest, repeat</h3><p>Short breaks, a long break every few sessions, and a streak that grows quietly.</p></div></li>
         </ol>
         <p class="aside reveal"><strong>Not ready to start?</strong> Press <kbd>?</kbd> for shortcuts, or just hit <kbd>Space</kbd> when you are.</p>
       </div>
@@ -127,10 +147,11 @@
     <!-- ===== 02 Sounds ===== -->
     <section class="section alt" id="sounds" aria-labelledby="h-sounds">
       <div class="wrap">
-        <header class="sec-head reveal">
-          <p class="eyebrow">Ambient mixer</p>
+        <span class="secno" aria-hidden="true">02</span>
+        <header class="sec-head">
+          <p class="eyebrow"><span>№ 02</span> Ambient mixer</p>
           <h2 id="h-sounds">Build your <em>soundscape</em></h2>
-          <p class="sub">Every sound is generated live with the Web Audio API. There are no audio files, so it loads instantly and works offline.</p>
+          <p class="sub reveal">Every sound is generated live with the Web Audio API. There are no audio files, so it loads instantly and works offline.</p>
         </header>
         <p class="note" id="audioNote" hidden>Your browser can’t play Web Audio, so sounds are unavailable.</p>
         <div class="presets reveal" id="presets" role="group" aria-label="Presets"></div>
@@ -145,12 +166,13 @@
     <!-- ===== 03 Tasks ===== -->
     <section class="section" id="tasks" aria-labelledby="h-tasks">
       <div class="wrap two">
-        <header class="sec-head reveal">
-          <p class="eyebrow">Tasks</p>
+        <span class="secno" aria-hidden="true">03</span>
+        <header class="sec-head">
+          <p class="eyebrow"><span>№ 03</span> Tasks</p>
           <h2 id="h-tasks">One thing, <em>done well</em></h2>
-          <p class="sub">Keep a short list for this session. Tap the target to make a task your current focus, drag to reorder, and watch its session count grow.</p>
+          <p class="sub reveal">Keep a short list for this session. Tap the target to make a task your current focus, drag to reorder, and watch its session count grow.</p>
         </header>
-        <div class="task-card reveal">
+        <div class="task-card reveal" data-fx="wipe">
           <form id="taskForm" class="add-form" autocomplete="off">
             <label class="sr-only" for="taskInput">New task</label>
             <input type="text" id="taskInput" maxlength="120" placeholder="What are you working on?" />
@@ -168,19 +190,20 @@
     <!-- ===== 04 Insights ===== -->
     <section class="section alt" id="insights" aria-labelledby="h-insights">
       <div class="wrap">
-        <header class="sec-head center reveal">
-          <p class="eyebrow">Insights</p>
+        <span class="secno" aria-hidden="true">04</span>
+        <header class="sec-head center">
+          <p class="eyebrow"><span>№ 04</span> Insights</p>
           <h2 id="h-insights">Numbers that <em>back it up</em></h2>
         </header>
-        <dl class="stat-grid reveal">
-          <div><dt>Today</dt><dd id="statToday">0m</dd></div>
-          <div><dt>This week</dt><dd id="statWeek">0m</dd></div>
-          <div><dt>Streak</dt><dd id="statStreak">0 days</dd></div>
-          <div><dt>All time</dt><dd id="statTotal">0m</dd></div>
+        <dl class="stat-grid">
+          <div class="reveal" data-fx="wipe"><dt>Today</dt><dd id="statToday">0m</dd></div>
+          <div class="reveal" data-fx="wipe"><dt>This week</dt><dd id="statWeek">0m</dd></div>
+          <div class="reveal" data-fx="wipe"><dt>Streak</dt><dd id="statStreak">0 days</dd></div>
+          <div class="reveal" data-fx="wipe"><dt>All time</dt><dd id="statTotal">0m</dd></div>
         </dl>
         <div class="charts">
-          <div class="card reveal"><h3>Last 7 days <span class="note small">(minutes)</span></h3><div class="chart" id="weekChart"></div></div>
-          <div class="card reveal"><h3>Last 12 weeks</h3><div class="chart heat" id="heatmap"></div></div>
+          <div class="card reveal" data-fx="wipe"><h3>Last 7 days <span class="note small">(minutes)</span></h3><div class="chart" id="weekChart"></div></div>
+          <div class="card reveal" data-fx="wipe"><h3>Last 12 weeks</h3><div class="chart heat" id="heatmap"></div></div>
         </div>
         <h3 class="mini reveal">Badges</h3>
         <ul class="badges reveal" id="badges"></ul>
@@ -207,7 +230,7 @@
         <div><h3>Good to know</h3><span>No account, no tracking</span><span>Data stays in your browser</span><span>Built for the BuildyourOwnWebsite Hackathon</span></div>
       </div>
     </div>
-    <div class="watermark" aria-hidden="true">Hushroom</div>
+    <div class="watermark" id="watermark" aria-hidden="true">Hushroom</div>
   </footer>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>

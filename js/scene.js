@@ -51,6 +51,7 @@ export function createScene(canvas, { windowBottom }) {
   const weather = { rain: 0, fire: 0, wind: 0 };
   const goal = { rain: 0, fire: 0, wind: 0 };
   let t = 0, last = 0, raf = 0, pending = false;
+  const par = { x: 0, y: 0 }, parT = { x: 0, y: 0 }; // pointer parallax, -1..1, smoothed
 
   // Fixed random scenery, generated once.
   const stars = Array.from({ length: 80 }, () => ({ x: Math.random(), y: Math.random() * 0.7, r: Math.random() * 1.2 + 0.4, ph: Math.random() * 6.28 }));
@@ -75,6 +76,8 @@ export function createScene(canvas, { windowBottom }) {
     for (const key of ['rain', 'fire', 'wind']) weather[key] += (goal[key] - weather[key]) * (animate ? 1 - Math.exp(-dt * 1.5) : 1);
     if (!animate) return;
     t += dt;
+    const kp = 1 - Math.exp(-dt * 3.5);
+    par.x += (parT.x - par.x) * kp; par.y += (parT.y - par.y) * kp;
     for (const c of clouds) { c.x += c.v * dt * (1 + weather.wind * 5); if (c.x > 1.25) c.x = -0.25; }
     for (const s of streaks) {
       s.y += s.v * dt;
@@ -174,7 +177,7 @@ export function createScene(canvas, { windowBottom }) {
     // sun
     const sunA = pal.sunA * (1 - weather.rain * 0.85);
     if (sunA > 0.02) {
-      const sx = wx + ww * pal.sunX, sy = wy + wh * pal.sunY, R = Math.min(ww, wh) * 0.09;
+      const sx = wx + ww * pal.sunX + par.x * -4, sy = wy + wh * pal.sunY + par.y * -3, R = Math.min(ww, wh) * 0.09;
       const glow = ctx.createRadialGradient(sx, sy, 0, sx, sy, R * 4.5);
       glow.addColorStop(0, rgba(pal.sun, 0.55 * sunA));
       glow.addColorStop(1, rgba(pal.sun, 0));
@@ -185,7 +188,7 @@ export function createScene(canvas, { windowBottom }) {
     // moon
     const moonA = pal.moonA * (1 - weather.rain * 0.75);
     if (moonA > 0.02) {
-      const mx = wx + ww * 0.24, my = wy + wh * 0.26, R = Math.min(ww, wh) * 0.07;
+      const mx = wx + ww * 0.24 + par.x * -4, my = wy + wh * 0.26 + par.y * -3, R = Math.min(ww, wh) * 0.07;
       const glow = ctx.createRadialGradient(mx, my, R * 0.6, mx, my, R * 4);
       glow.addColorStop(0, `rgba(200,215,255,${0.3 * moonA})`);
       glow.addColorStop(1, 'rgba(200,215,255,0)');
@@ -200,16 +203,16 @@ export function createScene(canvas, { windowBottom }) {
     // clouds (more and darker in rain)
     const cloudA = 0.55 + weather.rain * 0.35;
     const cloudC = mixc(pal.cloud, [110, 118, 135], weather.rain * 0.7);
-    for (const c of clouds) cloud(wx + c.x * ww, wy + c.y * wh, c.s * Math.min(1.3, ww / 520 + 0.4), cloudC, cloudA);
+    for (const c of clouds) cloud(wx + c.x * ww + par.x * -6, wy + c.y * wh + par.y * -3, c.s * Math.min(1.3, ww / 520 + 0.4), cloudC, cloudA);
 
     // hills + trees
-    hills(wx, ww, wb - wh * 0.22, wh * 0.06, 5.5, 1.2, mixc(pal.hill1, [60, 70, 85], weather.rain * 0.3));
-    hills(wx, ww, wb - wh * 0.1, wh * 0.05, 4, 4.1, mixc(pal.hill2, [40, 50, 62], weather.rain * 0.3));
+    hills(wx - 60 + par.x * -14, ww + 120, wb - wh * 0.22, wh * 0.06, 5.5, 1.2, mixc(pal.hill1, [60, 70, 85], weather.rain * 0.3));
+    hills(wx - 60 + par.x * -26, ww + 120, wb - wh * 0.1, wh * 0.05, 4, 4.1, mixc(pal.hill2, [40, 50, 62], weather.rain * 0.3));
     const sw = animate ? 1 : 0;
     for (const tr of trees) {
       const h = tr.h * wh;
       const sway = Math.sin(t * 1.3 + tr.ph) * (1.2 + weather.wind * 7) * (h / 60) * sw;
-      pine(wx + tr.x * ww, wb + 2, h, sway, pal.tree);
+      pine(wx + (tr.x * 1.08 - 0.04) * ww + par.x * -40, wb + 2 + par.y * -3, h, sway, pal.tree);
     }
 
     // rain streaks
@@ -336,7 +339,9 @@ export function createScene(canvas, { windowBottom }) {
   motionQuery.addEventListener?.('change', (e) => { animate = !e.matches; requestFrame(); });
 
   return {
-    setTheme(name) { target = T[name] || T.night; requestFrame(); },
+    /** snap = jump straight to the new palette (used under the circular wipe). */
+    setTheme(name, snap = false) { target = T[name] || T.night; if (snap) pal = clone(target); requestFrame(); },
+    setParallax(x, y) { parT.x = x; parT.y = y; },
     /** Each value 0..1 (0 = off). */
     setWeather(w) { Object.assign(goal, w); requestFrame(); },
     redraw: requestFrame,

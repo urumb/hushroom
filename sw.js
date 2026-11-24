@@ -2,7 +2,7 @@
 // network-first (so updates show immediately) and falls back to the cache when offline.
 // Bump VERSION whenever you change files so users get the update.
 
-const VERSION = 'hushroom-v3';
+const VERSION = 'hushroom-v4';
 const FILES = [
   './', 'index.html', 'css/style.css', 'manifest.webmanifest',
   'js/main.js', 'js/timer.js', 'js/audio.js', 'js/scene.js', 'js/tasks.js', 'js/stats.js', 'js/storage.js',
@@ -14,10 +14,14 @@ self.addEventListener('install', (e) => {
 });
 
 self.addEventListener('activate', (e) => {
-  e.waitUntil(
-    caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== VERSION).map((k) => caches.delete(k))))
-      .then(() => self.clients.claim()),
-  );
+  e.waitUntil((async () => {
+    const keys = await caches.keys();
+    const hadOld = keys.some((k) => k !== VERSION);
+    await Promise.all(keys.filter((k) => k !== VERSION).map((k) => caches.delete(k)));
+    await self.clients.claim();
+    // Someone with an older copy open: refresh it once so they see the new design.
+    if (hadOld) (await self.clients.matchAll({ type: 'window' })).forEach((c) => c.navigate(c.url));
+  })());
 });
 
 self.addEventListener('fetch', (e) => {
