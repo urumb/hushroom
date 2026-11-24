@@ -145,7 +145,7 @@ export function createScene(canvas, { windowBottom }) {
     ctx.fillRect(0, 0, W, H);
 
     // --- window geometry ---
-    const wx = W * 0.06, wy = Math.max(10, H * 0.03), ww = W - wx * 2;
+    const wx = W * 0.025 + 8, wy = W < 700 ? 74 : 86, ww = W - wx * 2; // top inset leaves room for the floating nav
     const wb = Math.max(H * 0.3, windowBottom());
     const wh = wb - wy;
 

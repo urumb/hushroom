@@ -7,7 +7,7 @@ import { Timer, MODES, DEFAULTS } from './timer.js';
 import { SoundEngine, CHANNELS, PRESETS } from './audio.js';
 import { createScene } from './scene.js';
 import { createTasks } from './tasks.js';
-import { recordFocus, renderStats, reloadHistory } from './stats.js';
+import { recordFocus, renderStats } from './stats.js';
 
 const $ = (id) => document.getElementById(id);
 const root = document.documentElement;
@@ -26,7 +26,7 @@ function toast(msg) {
 // Theme (Dawn / Day / Dusk / Night, plus Auto = follow local time)
 // ======================================================================
 const THEMES = ['auto', 'dawn', 'day', 'dusk', 'night'];
-const THEME_COLOR = { dawn: '#f3d7ce', day: '#d3e8f0', dusk: '#2d2346', night: '#0d1424' };
+const THEME_COLOR = { dawn: '#4c3a4e', day: '#5e4c40', dusk: '#2e2440', night: '#14192a' };
 
 function timeTheme(d = new Date()) {
   const h = d.getHours();
@@ -43,8 +43,8 @@ if (!THEMES.includes(themePref)) {
 }
 
 const sceneApi = createScene($('scene'), {
-  // The window ends just above the timer card.
-  windowBottom: () => $('timerCard').offsetTop - 30,
+  // The window fills the hero, leaving a thin strip of wall for the sill.
+  windowBottom: () => $('stage').clientHeight - 64,
 });
 
 function applyTheme() {
@@ -286,28 +286,18 @@ $('dlgConfirm').addEventListener('close', () => {
 });
 
 // ======================================================================
-// Tabs (Mixer / Tasks / Stats)
+// Scroll reveal + small nav niceties
 // ======================================================================
-const tabs = [...document.querySelectorAll('[role="tab"]')];
-function selectTab(tab, focus = false) {
-  for (const t of tabs) {
-    const on = t === tab;
-    t.setAttribute('aria-selected', String(on));
-    t.tabIndex = on ? 0 : -1;
-    $(t.getAttribute('aria-controls')).hidden = !on;
-  }
-  if (tab.id === 'tab-stats') { reloadHistory(); renderStats(statEls); }
-  if (focus) tab.focus();
+const reveals = document.querySelectorAll('.reveal');
+if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  const io = new IntersectionObserver((entries) => {
+    for (const en of entries) if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); }
+  }, { threshold: 0.12, rootMargin: '0px 0px -6% 0px' });
+  reveals.forEach((el, i) => { el.style.setProperty('--d', `${(i % 4) * 70}ms`); io.observe(el); });
+} else {
+  reveals.forEach((el) => el.classList.add('in'));
 }
-tabs.forEach((t, i) => {
-  t.addEventListener('click', () => selectTab(t));
-  t.addEventListener('keydown', (e) => {
-    const k = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
-    if (k) { e.preventDefault(); selectTab(tabs[(i + k + tabs.length) % tabs.length], true); }
-    if (e.key === 'Home') { e.preventDefault(); selectTab(tabs[0], true); }
-    if (e.key === 'End') { e.preventDefault(); selectTab(tabs[tabs.length - 1], true); }
-  });
-});
+$('footIntro').addEventListener('click', (e) => { e.preventDefault(); $('dlgWelcome').showModal(); });
 
 // ======================================================================
 // Focus mode

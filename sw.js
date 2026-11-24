@@ -2,7 +2,7 @@
 // cache-first and refreshes the cache in the background (stale-while-revalidate).
 // Bump VERSION whenever you change files so users get the update.
 
-const VERSION = 'hushroom-v1';
+const VERSION = 'hushroom-v2';
 const FILES = [
   './', 'index.html', 'css/style.css', 'manifest.webmanifest',
   'js/main.js', 'js/timer.js', 'js/audio.js', 'js/scene.js', 'js/tasks.js', 'js/stats.js', 'js/storage.js',

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Hushroom — a calm focus room for studying</title>
   <meta name="description" content="Hushroom is a calm focus room for students: a Pomodoro timer, live-generated ambient sounds, a task list and a living window scene. No signup, works offline." />
-  <meta name="theme-color" content="#0d1424" />
+  <meta name="theme-color" content="#15171c" />
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Hushroom — a calm focus room" />
   <meta property="og:description" content="Focus timer, rain/fire/café sounds synthesised in your browser, tasks and streaks. Private, free, offline." />
@@ -14,13 +14,15 @@
   <link rel="icon" href="icons/favicon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
   <link rel="stylesheet" href="css/style.css" />
+  <script>document.documentElement.classList.add('js');</script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
 
-  <header class="topbar">
-    <a class="brand" href="./" aria-label="Hushroom home">
-      <svg viewBox="0 0 64 64" width="30" height="30" aria-hidden="true">
+  <!-- ===== Floating glass nav ===== -->
+  <header class="nav">
+    <a class="brand" href="#stage" aria-label="Hushroom, back to the room">
+      <svg viewBox="0 0 64 64" width="26" height="26" aria-hidden="true">
         <rect width="64" height="64" rx="16" fill="#2d2346" />
         <path d="M40 14a19 19 0 1 0 10 34A16 16 0 0 1 40 14z" fill="#f6dcb0" />
         <circle cx="46" cy="18" r="2.2" fill="#f6dcb0" />
@@ -28,33 +30,41 @@
       </svg>
       <span>Hushroom</span>
     </a>
-
-    <fieldset class="theme-switch" id="themeSwitch">
-      <legend class="sr-only">Theme</legend>
-      <label><input type="radio" name="theme" value="auto" /><span>Auto</span></label>
-      <label><input type="radio" name="theme" value="dawn" /><span>Dawn</span></label>
-      <label><input type="radio" name="theme" value="day" /><span>Day</span></label>
-      <label><input type="radio" name="theme" value="dusk" /><span>Dusk</span></label>
-      <label><input type="radio" name="theme" value="night" /><span>Night</span></label>
-    </fieldset>
-
+    <nav class="nav-links" aria-label="Sections">
+      <a href="#method">Method</a>
+      <a href="#sounds">Sounds</a>
+      <a href="#tasks">Tasks</a>
+      <a href="#insights">Insights</a>
+    </nav>
     <div class="top-actions">
       <button type="button" class="icon-btn" id="btnMute" aria-pressed="false" aria-label="Mute all sounds" title="Mute (M)">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z"/><path class="waves" d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/><path class="slash" d="M16 9l5 6M21 9l-5 6"/></svg>
       </button>
-      <button type="button" class="icon-btn" id="btnFocus" aria-pressed="false" aria-label="Focus mode" title="Focus mode (F)">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
-      </button>
       <button type="button" class="icon-btn" id="btnHelp" aria-label="Help and keyboard shortcuts" title="Help (?)">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7M12 17h.01"/></svg>
       </button>
+      <button type="button" class="pill-btn" id="btnFocus" aria-pressed="false" title="Focus mode (F)">Focus mode</button>
     </div>
   </header>
 
-  <main id="main" class="layout">
-    <!-- ===== Stage: scene + timer ===== -->
+  <main id="main">
+    <!-- ===== Hero: the living window + timer ===== -->
     <section class="stage" id="stage" aria-label="Focus room">
       <canvas id="scene" aria-hidden="true"></canvas>
+
+      <div class="hero-copy">
+        <p class="eyebrow">A focus room for students</p>
+        <h1>Quiet, <em>on&nbsp;demand.</em></h1>
+        <p class="lede">A timer, rain and fire made live in your browser, and a window that listens to your mix. No account. Works offline.</p>
+        <fieldset class="theme-switch" id="themeSwitch">
+          <legend>Sky</legend>
+          <label><input type="radio" name="theme" value="auto" /><span>Auto</span></label>
+          <label><input type="radio" name="theme" value="dawn" /><span>Dawn</span></label>
+          <label><input type="radio" name="theme" value="day" /><span>Day</span></label>
+          <label><input type="radio" name="theme" value="dusk" /><span>Dusk</span></label>
+          <label><input type="radio" name="theme" value="night" /><span>Night</span></label>
+        </fieldset>
+      </div>
 
       <div class="timer-card" id="timerCard">
         <div class="modes" role="group" aria-label="Timer mode">
@@ -92,81 +102,112 @@
         <div class="dots" id="dots" role="img" aria-label="Sessions until long break"></div>
       </div>
 
+      <a class="scroll-cue" href="#method" aria-label="Scroll to learn more">Scroll</a>
       <button type="button" class="exit-focus" id="exitFocus">Exit focus mode</button>
-      <button type="button" class="audio-hint" id="audioHint" hidden>🔈 Tap to start your sounds</button>
+      <button type="button" class="audio-hint" id="audioHint" hidden>Tap to start your sounds</button>
     </section>
 
-    <!-- ===== Side panel: mixer / tasks / stats ===== -->
-    <section class="panel" aria-label="Tools">
-      <div class="tabs" role="tablist" aria-label="Panels" id="tabs">
-        <button role="tab" id="tab-mixer" aria-controls="panel-mixer" aria-selected="true">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4v16M12 4v16M19 4v16M3 9h4M10 15h4M17 8h4"/></svg><span>Mixer</span>
-        </button>
-        <button role="tab" id="tab-tasks" aria-controls="panel-tasks" aria-selected="false" tabindex="-1">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7l2 2 3-3M12 8h8M4 15l2 2 3-3M12 16h8"/></svg><span>Tasks</span>
-        </button>
-        <button role="tab" id="tab-stats" aria-controls="panel-stats" aria-selected="false" tabindex="-1">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V11M12 20V5M19 20v-7"/></svg><span>Stats</span>
-        </button>
+    <!-- ===== 01 Method ===== -->
+    <section class="section" id="method" aria-labelledby="h-method">
+      <div class="wrap">
+        <header class="sec-head center reveal">
+          <p class="eyebrow">The method</p>
+          <h2 id="h-method">Four steps, <em>no distractions</em></h2>
+        </header>
+        <ol class="steps-grid">
+          <li class="step reveal"><span class="num">1</span><div><h3>Set the mood</h3><p>Pick a preset or mix your own sounds. The window outside changes with them.</p></div></li>
+          <li class="step reveal"><span class="num">2</span><div><h3>Choose one task</h3><p>Write what you are working on and make it your focus. It sits above the timer.</p></div></li>
+          <li class="step reveal"><span class="num">3</span><div><h3>Focus</h3><p>Work until the chime. The timer stays accurate even when the tab is in the background.</p></div></li>
+          <li class="step reveal"><span class="num">4</span><div><h3>Rest, repeat</h3><p>Short breaks, a long break every few sessions, and a streak that grows quietly.</p></div></li>
+        </ol>
+        <p class="aside reveal"><strong>Not ready to start?</strong> Press <kbd>?</kbd> for shortcuts, or just hit <kbd>Space</kbd> when you are.</p>
       </div>
+    </section>
 
-      <!-- Mixer -->
-      <div role="tabpanel" id="panel-mixer" aria-labelledby="tab-mixer" class="tabpanel">
-        <h2>Sound mixer</h2>
+    <!-- ===== 02 Sounds ===== -->
+    <section class="section alt" id="sounds" aria-labelledby="h-sounds">
+      <div class="wrap">
+        <header class="sec-head reveal">
+          <p class="eyebrow">Ambient mixer</p>
+          <h2 id="h-sounds">Build your <em>soundscape</em></h2>
+          <p class="sub">Every sound is generated live with the Web Audio API. There are no audio files, so it loads instantly and works offline.</p>
+        </header>
         <p class="note" id="audioNote" hidden>Your browser can’t play Web Audio, so sounds are unavailable.</p>
-        <div class="presets" id="presets" role="group" aria-label="Presets"></div>
-        <div class="row master">
+        <div class="presets reveal" id="presets" role="group" aria-label="Presets"></div>
+        <div class="master reveal">
           <label for="masterVol">Master volume</label>
           <input type="range" id="masterVol" min="0" max="1" step="0.01" value="0.7" />
         </div>
         <ul class="channels" id="channels"></ul>
-        <p class="note small">Every sound is generated live in your browser with the Web Audio API. There are no audio files.</p>
       </div>
+    </section>
 
-      <!-- Tasks -->
-      <div role="tabpanel" id="panel-tasks" aria-labelledby="tab-tasks" class="tabpanel" hidden>
-        <h2>Tasks</h2>
-        <form id="taskForm" class="add-form" autocomplete="off">
-          <label class="sr-only" for="taskInput">New task</label>
-          <input type="text" id="taskInput" maxlength="120" placeholder="What are you working on?" />
-          <button type="submit" class="primary-btn small">Add</button>
-        </form>
-        <ul class="tasklist" id="taskList"></ul>
-        <div class="row between">
-          <span class="note small" id="taskCount"></span>
-          <button type="button" class="link-btn" id="clearDone">Clear completed</button>
+    <!-- ===== 03 Tasks ===== -->
+    <section class="section" id="tasks" aria-labelledby="h-tasks">
+      <div class="wrap two">
+        <header class="sec-head reveal">
+          <p class="eyebrow">Tasks</p>
+          <h2 id="h-tasks">One thing, <em>done well</em></h2>
+          <p class="sub">Keep a short list for this session. Tap the target to make a task your current focus, drag to reorder, and watch its session count grow.</p>
+        </header>
+        <div class="task-card reveal">
+          <form id="taskForm" class="add-form" autocomplete="off">
+            <label class="sr-only" for="taskInput">New task</label>
+            <input type="text" id="taskInput" maxlength="120" placeholder="What are you working on?" />
+            <button type="submit" class="pill-btn solid">Add</button>
+          </form>
+          <ul class="tasklist" id="taskList"></ul>
+          <div class="row between">
+            <span class="note small" id="taskCount"></span>
+            <button type="button" class="link-btn" id="clearDone">Clear completed</button>
+          </div>
         </div>
       </div>
+    </section>
 
-      <!-- Stats -->
-      <div role="tabpanel" id="panel-stats" aria-labelledby="tab-stats" class="tabpanel" hidden>
-        <h2>Your focus</h2>
-        <dl class="stat-grid">
+    <!-- ===== 04 Insights ===== -->
+    <section class="section alt" id="insights" aria-labelledby="h-insights">
+      <div class="wrap">
+        <header class="sec-head center reveal">
+          <p class="eyebrow">Insights</p>
+          <h2 id="h-insights">Numbers that <em>back it up</em></h2>
+        </header>
+        <dl class="stat-grid reveal">
           <div><dt>Today</dt><dd id="statToday">0m</dd></div>
           <div><dt>This week</dt><dd id="statWeek">0m</dd></div>
           <div><dt>Streak</dt><dd id="statStreak">0 days</dd></div>
           <div><dt>All time</dt><dd id="statTotal">0m</dd></div>
         </dl>
-        <h3>Last 7 days <span class="note small">(minutes)</span></h3>
-        <div class="chart" id="weekChart"></div>
-        <h3>Last 12 weeks</h3>
-        <div class="chart heat" id="heatmap"></div>
-        <h3>Badges</h3>
-        <ul class="badges" id="badges"></ul>
-        <h3>Your data</h3>
-        <p class="note small">Everything is stored only in this browser. Export a backup or move it to another device.</p>
-        <div class="row wrap">
-          <button type="button" class="ghost-btn" id="btnExport">Export JSON</button>
-          <button type="button" class="ghost-btn" id="btnImport">Import JSON</button>
-          <input type="file" id="importFile" accept="application/json,.json" hidden />
-          <button type="button" class="ghost-btn danger" id="btnResetData">Reset all data</button>
+        <div class="charts">
+          <div class="card reveal"><h3>Last 7 days <span class="note small">(minutes)</span></h3><div class="chart" id="weekChart"></div></div>
+          <div class="card reveal"><h3>Last 12 weeks</h3><div class="chart heat" id="heatmap"></div></div>
+        </div>
+        <h3 class="mini reveal">Badges</h3>
+        <ul class="badges reveal" id="badges"></ul>
+        <div class="data-tools reveal">
+          <p class="note small">Everything is stored only in this browser. Export a backup or move it to another device.</p>
+          <div class="row wrap">
+            <button type="button" class="pill-btn" id="btnExport">Export JSON</button>
+            <button type="button" class="pill-btn" id="btnImport">Import JSON</button>
+            <input type="file" id="importFile" accept="application/json,.json" hidden />
+            <button type="button" class="pill-btn danger" id="btnResetData">Reset all data</button>
+          </div>
         </div>
       </div>
     </section>
   </main>
 
+  <!-- ===== Footer ===== -->
   <footer class="footer">
-    Hushroom · built for the BuildyourOwnWebsite Hackathon · <a href="https://github.com/urumb/hushroom" id="repoLink" rel="noopener">Source on GitHub</a>
+    <div class="wrap">
+      <p class="foot-line">Hushroom helps you find a quiet place to think <em>not just a quiet tab.</em></p>
+      <div class="foot-cols">
+        <div><h3>Explore</h3><a href="#method">Method</a><a href="#sounds">Sounds</a><a href="#tasks">Tasks</a><a href="#insights">Insights</a></div>
+        <div><h3>Project</h3><a href="https://github.com/urumb/hushroom" id="repoLink" rel="noopener">Source on GitHub</a><a href="#" id="footIntro">Show the intro</a></div>
+        <div><h3>Good to know</h3><span>No account, no tracking</span><span>Data stays in your browser</span><span>Built for the BuildyourOwnWebsite Hackathon</span></div>
+      </div>
+    </div>
+    <div class="watermark" aria-hidden="true">Hushroom</div>
   </footer>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -184,8 +225,8 @@
       <label class="check-row"><input type="checkbox" id="setAuto" /> Start the next session automatically</label>
       <label class="check-row"><input type="checkbox" id="setNotify" /> Show a notification when a session ends</label>
       <div class="dlg-actions">
-        <button type="button" class="ghost-btn" id="btnDefaults">Restore defaults</button>
-        <button class="primary-btn small" value="done">Done</button>
+        <button type="button" class="pill-btn" id="btnDefaults">Restore defaults</button>
+        <button class="pill-btn solid" value="done">Done</button>
       </div>
     </form>
   </dialog>
@@ -195,11 +236,11 @@
       <h2 id="welcomeTitle">Welcome to Hushroom</h2>
       <p>A quiet place to study. No account, nothing to install, and it all stays on your device.</p>
       <ol class="steps">
-        <li><strong>Set the mood.</strong> Open the <em>Mixer</em>, pick a preset like “Rainy library” and watch the window change with it.</li>
+        <li><strong>Set the mood.</strong> Open the <em>Sounds</em> section, pick a preset like “Rainy library” and watch the window change with it.</li>
         <li><strong>Pick one task.</strong> Add it in <em>Tasks</em> and press the target icon to make it your focus.</li>
-        <li><strong>Press Start.</strong> Work until the chime, rest, repeat. Your streak grows in <em>Stats</em>.</li>
+        <li><strong>Press Start.</strong> Work until the chime, rest, repeat. Your streak grows in <em>Insights</em>.</li>
       </ol>
-      <div class="dlg-actions"><button class="primary-btn" value="ok">Let’s focus</button></div>
+      <div class="dlg-actions"><button class="pill-btn solid" value="ok">Let’s focus</button></div>
     </form>
   </dialog>
 
@@ -215,8 +256,8 @@
         <div><dt><kbd>?</kbd></dt><dd>This help</dd></div>
       </dl>
       <div class="dlg-actions">
-        <button type="button" class="ghost-btn" id="btnIntro">Show intro again</button>
-        <button class="primary-btn small" value="close">Close</button>
+        <button type="button" class="pill-btn" id="btnIntro">Show intro again</button>
+        <button class="pill-btn solid" value="close">Close</button>
       </div>
     </form>
   </dialog>
@@ -226,8 +267,8 @@
       <h2 id="confirmTitle">Reset all data?</h2>
       <p>This permanently deletes your tasks, stats, streak, mix and settings from this browser. It cannot be undone. Consider exporting a backup first.</p>
       <div class="dlg-actions">
-        <button class="ghost-btn" value="cancel">Cancel</button>
-        <button class="primary-btn danger-solid small" value="confirm" id="btnConfirmReset">Delete everything</button>
+        <button class="pill-btn" value="cancel">Cancel</button>
+        <button class="pill-btn danger-solid" value="confirm" id="btnConfirmReset">Delete everything</button>
       </div>
     </form>
   </dialog>
