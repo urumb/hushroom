@@ -1,17 +1,17 @@
 # Devpost description (under 250 words)
 
-**Hushroom** is a calm, cosy focus room for students, in a single website with no signup, no backend and no tracking.
+**Hushroom** is a calm, cosy focus room for students: one website, no signup, no backend, no tracking.
 
-Studying online usually means juggling a timer tab, a noise video full of ads and a to-do app. Hushroom puts them in one quiet place that feels nice to be in.
+Studying online usually means juggling a timer tab, a noise video full of ads and a to-do app. Hushroom puts them in one quiet place.
 
 **Key features**
-- **Pomodoro timer** on a paper-ticket card with rolling digits. It is accurate even in a background tab (it uses timestamps, not tick counting), with a live tab-title countdown and a soft chime.
-- **Ambient mixer:** rain, wind, fireplace, café murmur, brown noise and a lo-fi pad. Every sound is synthesised live with the Web Audio API. There are no audio files, so it loads instantly and works offline.
-- **Living window:** drawn on canvas. The sky follows Dawn, Day, Dusk or Night (or your local time) and reacts to your mix, with rain streaks and droplets, a flickering fire glow and swaying trees. A warm lamp follows your cursor.
-- **Tasks and insights:** pick one current task, track sessions per task, and see streaks, a weekly chart, a 12-week heatmap and badges.
-- **Focus mode, keyboard shortcuts, installable PWA,** plus JSON export and import of your data.
+- **Pomodoro timer** on a paper-ticket card with rolling digits. It stays accurate in a background tab (timestamps, not tick counting) and shows the countdown in the tab title.
+- **Ambient mixer:** rain, wind, fireplace, café murmur, brown noise and a lo-fi pad, all synthesised live with the Web Audio API. No audio files, so it loads instantly and works offline.
+- **Living window:** a canvas scene whose sky follows Dawn, Day, Dusk or Night and reacts to your mix, with rain, fire glow and swaying trees.
+- **Tasks and insights:** one current task, sessions per task, streaks, a weekly chart, a 12-week heatmap and badges.
+- **Focus mode, shortcuts, installable PWA,** and JSON export and import.
 
-**Built with** plain HTML, CSS and vanilla JavaScript, with zero runtime dependencies. All data stays in your browser. The design is hand-built, in a paper-and-ink style with its own motion: split-word headlines, a circular theme wipe and scroll effects. It is accessible by design: keyboard control, WCAG AA contrast, reduced-motion support.
+**Built with** plain HTML, CSS and vanilla JavaScript, with zero runtime dependencies. All data stays in your browser. The paper-and-ink design and its motion are hand-built, and it is keyboard accessible, WCAG AA contrast, and respects reduced motion.
 
 **AI disclosure:** built with Claude Code (Anthropic) as a coding assistant. I reviewed and tested the code and can explain it.
 
