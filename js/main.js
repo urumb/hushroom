@@ -206,6 +206,7 @@ function setDigits(str) {
       // seconds wrap 0 -> 9: roll onto the spare "9" at the bottom, then silently jump back to the top
       c.style.setProperty('--d', 10);
       c.addEventListener('transitionend', () => {
+        if (c.style.getPropertyValue('--d') !== '10') return; // a newer tick already moved on
         c.style.transition = 'none'; c.style.setProperty('--d', 0); void c.offsetWidth; c.style.transition = '';
       }, { once: true });
     } else c.style.setProperty('--d', 9 - d);
@@ -484,7 +485,11 @@ document.addEventListener('fullscreenchange', () => { if (!document.fullscreenEl
 // Dialogs, welcome flow, shortcuts
 // ======================================================================
 document.querySelectorAll('dialog').forEach((d) => {
-  d.addEventListener('click', (e) => { if (e.target === d) d.close(); }); // click on backdrop closes
+  d.addEventListener('click', (e) => { // click on the backdrop (outside the box) closes
+    const r = d.getBoundingClientRect();
+    const inside = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+    if (e.target === d && !inside) d.close();
+  });
 });
 $('btnHelp').addEventListener('click', () => $('dlgHelp').showModal());
 $('btnIntro').addEventListener('click', () => { $('dlgHelp').close(); $('dlgWelcome').showModal(); });

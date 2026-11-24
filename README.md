@@ -46,7 +46,9 @@ You open a window onto a small, living scene. Switch on the rain and streaks run
 
 ## The look
 
-The interface is editorial and calm: a floating glass nav, a cinematic full-bleed hero, serif headlines with an italic accent, pill buttons and warm cream / ink-brown / rust colours. Below the hero the page scrolls through four short sections: **Method**, **Sounds**, **Tasks** and **Insights**. It ends in a dark footer with a faded wordmark.
+The interface is calm and a little hand-made: a **paper-and-ink** look with warm cream, ink-brown and rust colours, serif headlines with an italic accent, a paper grain, thin ink borders and hard offset shadows. The timer is a tilted paper ticket with a spinning stamp and rolling digits. Below the full-bleed window hero the page scrolls through a marquee and four short sections: **Method**, **Sounds**, **Tasks** and **Insights**. It ends in a dark footer with a big faded wordmark.
+
+The motion is hand-built too, with no animation library: split-word headlines that rise into place, hand-drawn underlines, a warm lamp and layered parallax that follow your cursor, a circular wipe when you change the sky or enter focus mode (in browsers that support the View Transitions API), buttons that lean toward the pointer, and scroll effects. All of it is turned down to simple fades when `prefers-reduced-motion` is on.
 
 All four themes keep text at WCAG AA contrast, and every animation respects `prefers-reduced-motion`.
 

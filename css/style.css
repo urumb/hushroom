@@ -88,6 +88,7 @@ svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round
 .nav { position: fixed; z-index: 100; top: 0; left: 0; right: 0; height: var(--nav-h); display: flex; align-items: center; gap: 1rem; padding: 0 clamp(14px, 3vw, 36px); transition: background .4s, transform .5s var(--expo), box-shadow .4s; }
 .nav.solid { background: var(--ink-bar); box-shadow: 0 1px 0 var(--line); }
 .nav.hide { transform: translateY(-100%); }
+.nav.hide:focus-within { transform: none; }
 .brand { display: flex; align-items: center; gap: .5rem; text-decoration: none; color: var(--text); font-family: var(--serif); font-size: 1.35rem; letter-spacing: -.02em; margin-right: auto; }
 .brand svg { transition: transform .6s var(--spring); }
 .brand:hover svg { transform: rotate(-24deg) scale(1.1); }
@@ -138,7 +139,7 @@ svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round
 /* warm lamp that follows the pointer across the window */
 .stage::before { content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: 0; transition: opacity .5s; background: radial-gradient(380px circle at var(--mx) var(--my), rgba(255, 196, 130, .26), rgba(255, 196, 130, .06) 55%, transparent 70%); mix-blend-mode: screen; }
 .stage.lit::before { opacity: 1; }
-.stage::after { content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none; background: linear-gradient(180deg, rgba(14, 10, 8, .4) 0%, rgba(14, 10, 8, 0) 22%, rgba(14, 10, 8, 0) 45%, rgba(14, 10, 8, .8) 100%); }
+.stage::after { content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none; background: linear-gradient(180deg, rgba(14, 10, 8, .45) 0%, rgba(14, 10, 8, 0) 20%, rgba(14, 10, 8, .12) 36%, rgba(14, 10, 8, .6) 58%, rgba(14, 10, 8, .86) 100%); }
 .stage > * { z-index: 1; }
 
 .hero-copy { position: absolute; left: clamp(20px, 5vw, 72px); bottom: clamp(28px, 6vh, 64px); max-width: min(600px, 48vw); translate: 0 calc(var(--sy, 0) * -.16px); }
@@ -449,6 +450,7 @@ dialog .pill-btn.danger-solid { color: #fff; }
 
 /* ---------- Responsive ---------- */
 @media (max-width: 960px) {
+  .stage::after { background: linear-gradient(180deg, rgba(14, 10, 8, .72) 0%, rgba(14, 10, 8, .58) 30%, rgba(14, 10, 8, .12) 48%, rgba(14, 10, 8, .15) 60%, rgba(14, 10, 8, .82) 100%); }
   .nav-links { display: none; }
   .hero-copy { max-width: 90vw; top: 84px; bottom: auto; translate: none; }
   .hero-copy h1 { font-size: clamp(2.8rem, 12vw, 4.2rem); }
