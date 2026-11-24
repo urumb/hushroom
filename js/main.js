@@ -192,14 +192,24 @@ $('ringProg').style.strokeDasharray = RING;
 const digitsEl = $('digits');
 let cols = [];
 function buildDigits(minuteDigits) {
-  const dg = () => `<span class="dg"><span class="col">${Array.from({ length: 10 }, (_, i) => `<b>${i}</b>`).join('')}</span></span>`;
+  const dg = () => `<span class="dg"><span class="col">${Array.from({ length: 10 }, (_, i) => `<b>${9 - i}</b>`).join('')}<b>9</b></span></span>`;
   digitsEl.innerHTML = dg().repeat(minuteDigits) + '<span class="colon">:</span>' + dg().repeat(2);
   cols = [...digitsEl.querySelectorAll('.col')];
 }
 function setDigits(str) {
   const ds = str.replace(':', '').split('');
   if (ds.length !== cols.length) buildDigits(ds.length - 2);
-  cols.forEach((c, i) => c.style.setProperty('--d', ds[i]));
+  cols.forEach((c, i) => {
+    const d = Number(ds[i]), prev = c._d;
+    c._d = d;
+    if (i === cols.length - 1 && prev === 0 && d === 9) {
+      // seconds wrap 0 -> 9: roll onto the spare "9" at the bottom, then silently jump back to the top
+      c.style.setProperty('--d', 10);
+      c.addEventListener('transitionend', () => {
+        c.style.transition = 'none'; c.style.setProperty('--d', 0); void c.offsetWidth; c.style.transition = '';
+      }, { once: true });
+    } else c.style.setProperty('--d', 9 - d);
+  });
 }
 buildDigits(2);
 
@@ -364,7 +374,12 @@ wm.innerHTML = [...wm.textContent].map((ch, i) => `<span style="--i:${i}">${ch}<
 const toReveal = [...document.querySelectorAll('.reveal, .split, .watermark')].filter((el) => el !== heroH1);
 if ('IntersectionObserver' in window && !reduced) {
   const io = new IntersectionObserver((entries) => {
-    for (const en of entries) if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); }
+    for (const en of entries) if (en.isIntersecting) {
+        const el = en.target;
+        el.classList.add('in');
+        io.unobserve(el);
+        setTimeout(() => el.style.setProperty('--d', '0s'), 2200);
+      }
   }, { threshold: 0.15, rootMargin: '0px 0px -6% 0px' });
   toReveal.forEach((el) => {
     const sibs = [...(el.parentElement?.children || [])].filter((c) => c.classList.contains('reveal'));
@@ -385,9 +400,9 @@ if (reduced || seen) {
 } else {
   setTimeout(() => {
     loader.classList.add('done');
-    setTimeout(startHero, 450);
-    setTimeout(() => loader.remove(), 1500);
-  }, 1000);
+    setTimeout(startHero, 350);
+    setTimeout(() => loader.remove(), 1300);
+  }, 750);
 }
 
 // 4. Magnetic buttons: they lean toward the pointer.
