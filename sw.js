@@ -2,7 +2,7 @@
 // network-first (so updates show immediately) and falls back to the cache when offline.
 // Bump VERSION whenever you change files so users get the update.
 
-const VERSION = 'hushroom-v6';
+const VERSION = 'hushroom-v7';
 const FILES = [
   './', 'index.html', 'css/style.css', 'manifest.webmanifest',
   'js/main.js', 'js/timer.js', 'js/audio.js', 'js/scene.js', 'js/tasks.js', 'js/stats.js', 'js/storage.js',
@@ -28,7 +28,7 @@ self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== location.origin) return;
   e.respondWith(
-    fetch(req, { cache: 'no-cache' }).then((res) => {
+    fetch(req).then((res) => {
       if (res.ok) { const copy = res.clone(); caches.open(VERSION).then((c) => c.put(req, copy)); }
       return res;
     }).catch(() => caches.match(req).then((hit) => hit || caches.match('index.html'))),

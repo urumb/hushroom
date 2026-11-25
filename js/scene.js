@@ -57,13 +57,17 @@ export function createScene(canvas, { windowBottom }) {
   const stars = Array.from({ length: 80 }, () => ({ x: Math.random(), y: Math.random() * 0.7, r: Math.random() * 1.2 + 0.4, ph: Math.random() * 6.28 }));
   const clouds = Array.from({ length: 6 }, () => ({ x: Math.random(), y: 0.08 + Math.random() * 0.35, s: 0.7 + Math.random() * 0.8, v: 0.004 + Math.random() * 0.006 }));
   const trees = Array.from({ length: 11 }, (_, i) => ({ x: (i + Math.random() * 0.6) / 11, h: 0.16 + Math.random() * 0.14, ph: Math.random() * 6.28 }));
-  const streaks = Array.from({ length: 150 }, () => ({ x: Math.random(), y: Math.random(), v: 1.1 + Math.random() * 0.9, l: 0.05 + Math.random() * 0.06 }));
+  const streaks = Array.from({ length: 110 }, () => ({ x: Math.random(), y: Math.random(), v: 1.1 + Math.random() * 0.9, l: 0.05 + Math.random() * 0.06 }));
   let drops = [];
+  let vig = null; // cached vignette layer
 
   function resize() {
     const r = canvas.getBoundingClientRect();
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
     W = r.width; H = r.height;
+    let dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    const budget = 2.2e6; // the scene is soft anyway; don't pay for 4K pixels
+    if (W * H * dpr * dpr > budget) dpr = Math.max(1, Math.sqrt(budget / (W * H)));
+    vig = null;
     canvas.width = Math.max(1, Math.round(W * dpr));
     canvas.height = Math.max(1, Math.round(H * dpr));
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -103,7 +107,7 @@ export function createScene(canvas, { windowBottom }) {
   function hills(x0, w, baseY, amp, f1, p1, color) {
     ctx.beginPath();
     ctx.moveTo(x0, baseY + 400);
-    for (let x = 0; x <= w; x += 6) {
+    for (let x = 0; x <= w; x += 10) {
       const u = x / w;
       ctx.lineTo(x0 + x, baseY - amp * (Math.sin(u * f1 + p1) + 0.5 * Math.sin(u * f1 * 2.3 + p1 * 2)) - amp);
     }
@@ -181,7 +185,7 @@ export function createScene(canvas, { windowBottom }) {
       const glow = ctx.createRadialGradient(sx, sy, 0, sx, sy, R * 4.5);
       glow.addColorStop(0, rgba(pal.sun, 0.55 * sunA));
       glow.addColorStop(1, rgba(pal.sun, 0));
-      ctx.fillStyle = glow; ctx.fillRect(wx, wy, ww, wh);
+      ctx.fillStyle = glow; ctx.fillRect(sx - R * 4.5, sy - R * 4.5, R * 9, R * 9);
       ctx.fillStyle = rgba(pal.sun, sunA);
       ctx.beginPath(); ctx.arc(sx, sy, R, 0, 6.283); ctx.fill();
     }
@@ -192,7 +196,7 @@ export function createScene(canvas, { windowBottom }) {
       const glow = ctx.createRadialGradient(mx, my, R * 0.6, mx, my, R * 4);
       glow.addColorStop(0, `rgba(200,215,255,${0.3 * moonA})`);
       glow.addColorStop(1, 'rgba(200,215,255,0)');
-      ctx.fillStyle = glow; ctx.fillRect(wx, wy, ww, wh);
+      ctx.fillStyle = glow; ctx.fillRect(mx - R * 4, my - R * 4, R * 8, R * 8);
       ctx.fillStyle = `rgba(236,240,255,${moonA})`;
       ctx.beginPath(); ctx.arc(mx, my, R, 0, 6.283); ctx.fill();
       ctx.fillStyle = `rgba(170,182,220,${0.35 * moonA})`;
@@ -306,35 +310,45 @@ export function createScene(canvas, { windowBottom }) {
         const fg = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
         fg.addColorStop(0, `rgba(255,140,50,${a * weather.fire * fl})`);
         fg.addColorStop(1, 'rgba(255,90,20,0)');
-        ctx.fillStyle = fg; ctx.fillRect(0, 0, W, H);
+        ctx.fillStyle = fg; ctx.fillRect(0, H * 0.2, W, H * 0.8);
       }
       ctx.restore();
     }
 
     // vignette
-    const vg = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.35, W / 2, H / 2, Math.max(W, H) * 0.8);
-    vg.addColorStop(0, 'rgba(0,0,0,0)');
-    vg.addColorStop(1, 'rgba(0,0,0,0.32)');
-    ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+    if (!vig) {
+      vig = document.createElement('canvas');
+      vig.width = canvas.width; vig.height = canvas.height;
+      const vc = vig.getContext('2d');
+      vc.scale(canvas.width / W, canvas.height / H);
+      const vg = vc.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.35, W / 2, H / 2, Math.max(W, H) * 0.8);
+      vg.addColorStop(0, 'rgba(0,0,0,0)');
+      vg.addColorStop(1, 'rgba(0,0,0,0.32)');
+      vc.fillStyle = vg; vc.fillRect(0, 0, W, H);
+    }
+    ctx.drawImage(vig, 0, 0, W, H);
   }
 
   // ---- animation loop (pauses when hidden or when motion is reduced) ----
-  function frame(now) {
-    raf = 0; pending = false;
-    const dt = Math.min(0.05, (now - last) / 1000 || 0.016);
+  // Capped at ~45 fps, and it stops completely while the hero is off-screen or the tab is hidden.
+  let visible = true;
+  function loop(now) {
+    raf = requestAnimationFrame(loop);
+    if (now - last < 22) return;
+    const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
     update(dt);
     draw();
-    // Keep looping while animating, or until the palette has settled in static mode.
-    if (animate && !document.hidden) { raf = requestAnimationFrame(frame); pending = true; }
+    if (!(animate && visible && !document.hidden)) { cancelAnimationFrame(raf); raf = 0; }
   }
   function requestFrame() {
-    if (pending) return;
-    pending = true;
-    raf = requestAnimationFrame((n) => { last = n; frame(n); });
+    if (raf) return;
+    last = performance.now() - 30;
+    raf = requestAnimationFrame(loop);
   }
 
   new ResizeObserver(resize).observe(canvas);
+  new IntersectionObserver((en) => { visible = en[0].isIntersecting; if (visible) requestFrame(); }).observe(canvas);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) requestFrame(); });
   motionQuery.addEventListener?.('change', (e) => { animate = !e.matches; requestFrame(); });
 

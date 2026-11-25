@@ -219,7 +219,7 @@ const BUILDERS = {
     const drop = () => {
       if (dead) return;
       burst(ctx, out, b.white, { freq: rand(1500, 5500), q: 3, peak: rand(0.05, 0.22), decay: rand(0.03, 0.07) });
-      timer = setTimeout(drop, rand(25, 150));
+      timer = setTimeout(drop, rand(45, 170));
     };
     drop();
     return { stop() { dead = true; clearTimeout(timer); wash.stop(); } };

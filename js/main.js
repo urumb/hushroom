@@ -401,9 +401,9 @@ if (reduced || seen) {
 } else {
   setTimeout(() => {
     loader.classList.add('done');
-    setTimeout(startHero, 350);
-    setTimeout(() => loader.remove(), 1300);
-  }, 750);
+    setTimeout(startHero, 250);
+    setTimeout(() => loader.remove(), 1100);
+  }, 450);
 }
 
 // 4. Magnetic buttons: they lean toward the pointer.
@@ -443,12 +443,13 @@ function onScroll() {
   if (!reduced) {
     if (y > lastY && y > innerHeight * 0.9) nav.classList.add('hide');
     else if (y < lastY) nav.classList.remove('hide');
-    stage.style.setProperty('--sy', Math.min(y, innerHeight));
+    if (y < innerHeight * 1.3) stage.style.setProperty('--sy', Math.min(y, innerHeight)); // only while the hero is on screen
     marquee.style.setProperty('--sk', `${Math.max(-7, Math.min(7, -(y - lastY) * 0.12))}deg`);
     clearTimeout(skewTimer);
     skewTimer = setTimeout(() => marquee.style.setProperty('--sk', '0deg'), 120);
     for (const s of sections) {
       const r = s.getBoundingClientRect();
+      if (r.bottom < -200 || r.top > innerHeight + 200) continue; // skip sections far off-screen
       s.style.setProperty('--p', ((r.top + r.height / 2 - innerHeight / 2) / innerHeight).toFixed(3));
     }
   }
