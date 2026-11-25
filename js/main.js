@@ -68,8 +68,9 @@ function applyTheme(snap = false) {
   document.querySelector('meta[name="theme-color"]').content = THEME_COLOR[eff];
   document.querySelectorAll('input[name="theme"]').forEach((r) => { r.checked = r.value === themePref; });
 }
-function setThemePref(p, origin) { themePref = p; save('theme', p); iris(origin, () => applyTheme(true)); }
-document.querySelectorAll('input[name="theme"]').forEach((r) => r.addEventListener('change', () => setThemePref(r.value, r.parentElement)));
+// Theme changes stay cheap: the CSS colours fade and the scene blends smoothly (no full-page snapshot).
+function setThemePref(p) { themePref = p; save('theme', p); applyTheme(); }
+document.querySelectorAll('input[name="theme"]').forEach((r) => r.addEventListener('change', () => setThemePref(r.value)));
 setInterval(() => { if (themePref === 'auto') applyTheme(); }, 60000);
 applyTheme();
 
@@ -509,7 +510,7 @@ document.addEventListener('keydown', (e) => {
   } else if (k === 'r') timer.reset();
   else if (k === 'm') setMuted(!audio.muted);
   else if (k === 'f') setFocusMode(!focusMode);
-  else if (k === 't') setThemePref(THEMES[(THEMES.indexOf(themePref) + 1) % THEMES.length], null);
+  else if (k === 't') setThemePref(THEMES[(THEMES.indexOf(themePref) + 1) % THEMES.length]);
   else if (e.key === '?') $('dlgHelp').showModal();
   else if (e.key === 'Escape' && focusMode) setFocusMode(false);
 });

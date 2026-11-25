@@ -21,7 +21,7 @@ Studying online usually means juggling a timer tab, a noise video full of ads an
 
 1. **0:00** "Hushroom is a focus room for students: no signup, works offline." Show the hero, with the window scene and the ticket timer. Move the mouse so the lamp and parallax follow it.
 2. **0:08** Scroll to **Sounds** and click the **Rainy library** preset. Rain streaks and droplets appear on the window and the rain sound starts. "Every sound is generated live with the Web Audio API, with no audio files."
-3. **0:20** Switch to **Cosy cabin**. The fire glow flickers. Click a sky option such as **Dusk** to show the circular wipe, then press **T** to cycle the themes. Note that Auto follows your local time.
+3. **0:20** Switch to **Cosy cabin**. The fire glow flickers. Click a sky option such as **Dusk** and watch the window blend into it, then press **T** to cycle the themes. Note that Auto follows your local time.
 4. **0:30** Scroll to **Tasks**, add "Chapter 5 revision" and press the target icon. It appears on the timer ticket.
 5. **0:38** Scroll back up and press **Space** to start. Point at the rolling digits, the ring, and the countdown in the browser tab title. "It uses timestamps, so it stays accurate in a background tab."
 6. **0:46** Press **F** for focus mode (just the scene, timer and task). Press **F** again to exit.

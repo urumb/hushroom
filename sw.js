@@ -2,7 +2,7 @@
 // network-first (so updates show immediately) and falls back to the cache when offline.
 // Bump VERSION whenever you change files so users get the update.
 
-const VERSION = 'hushroom-v7';
+const VERSION = 'hushroom-v8';
 const FILES = [
   './', 'index.html', 'css/style.css', 'manifest.webmanifest',
   'js/main.js', 'js/timer.js', 'js/audio.js', 'js/scene.js', 'js/tasks.js', 'js/stats.js', 'js/storage.js',
