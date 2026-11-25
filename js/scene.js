@@ -306,7 +306,7 @@ export function createScene(canvas, { windowBottom }) {
       const fl = animate ? 0.8 + 0.12 * Math.sin(t * 9) + 0.08 * Math.sin(t * 5.3 + 1) + 0.05 * Math.sin(t * 17) : 0.85;
       ctx.save();
       ctx.globalCompositeOperation = 'lighter';
-      for (const [cx, cy, r, a] of [[W * 0.5, H * 1.02, H * 0.95, 0.34], [W * 0.1, H, H * 0.6, 0.16], [W * 0.9, H, H * 0.6, 0.16]]) {
+      for (const [cx, cy, r, a] of [[W * 0.5, H * 1.02, H * 1.0, 0.62], [W * 0.1, H, H * 0.65, 0.3], [W * 0.9, H, H * 0.65, 0.3]]) {
         const fg = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
         fg.addColorStop(0, `rgba(255,140,50,${a * weather.fire * fl})`);
         fg.addColorStop(1, 'rgba(255,90,20,0)');

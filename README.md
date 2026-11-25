@@ -54,11 +54,21 @@ All four themes keep text at WCAG AA contrast, and every animation respects `pre
 
 ## Screenshots
 
-> _Screenshots will be added to [`/screenshots`](screenshots/)._
+<div align="center">
 
-| Night, with rain | Day | On a phone |
+<img src="screenshots/night-rain.png" alt="Hushroom at night with the rain sound on: raindrops on the window and the paper-ticket timer" width="100%" />
+
+<sub>Night, with the rain sound on. The window changes with the mix.</sub>
+
+</div>
+
+| Day | Dusk, cosy cabin mix | On a phone |
 | :-: | :-: | :-: |
-| `screenshots/night-rain.png` | `screenshots/day.png` | `screenshots/mobile.png` |
+| <img src="screenshots/day.png" alt="Hushroom in the Day theme" width="320" /> | <img src="screenshots/cabin-dusk.png" alt="Hushroom at dusk with the fireplace on" width="320" /> | <img src="screenshots/mobile.png" alt="Hushroom on a phone" width="150" /> |
+
+| Sound mixer | Insights |
+| :-: | :-: |
+| <img src="screenshots/sounds.png" alt="The sound mixer section with six sound cards" width="420" /> | <img src="screenshots/insights.png" alt="The insights section with streak, weekly chart and heatmap" width="420" /> |
 
 ## Keyboard shortcuts
 

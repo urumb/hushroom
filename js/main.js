@@ -102,6 +102,9 @@ function saveMix() {
 function updateWeather() {
   const lvl = (id) => (audio.state[id].on ? 0.3 + 0.7 * audio.state[id].vol : 0);
   sceneApi.setWeather({ rain: lvl('rain'), fire: lvl('fire'), wind: lvl('wind') });
+  const st = $('stage'); // the CSS hearth glow follows the fire channel
+  st.classList.toggle('fire-on', lvl('fire') > 0);
+  st.style.setProperty('--fire', lvl('fire').toFixed(2));
 }
 
 function updateHint() {
